@@ -4,9 +4,8 @@ on:
   push:
     branches: [ "main" ]
   schedule:
-    # اجرا هر 6 ساعت یکبار (چون گیت‌هاب اکشن‌ها را بعد از 6 ساعت می‌کشد)
-    - cron: '0 */6 * * *'
-  workflow_dispatch: # دکمه اجرای دستی
+    - cron: '0 */6 * * *' # اجرا هر 6 ساعت
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,11 +23,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # تغییر مهم: نصب مستقیم کتابخانه بدون نیاز به فایل متنی
+        pip install pyTelegramBotAPI
 
     - name: Run Bot
       env:
         BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
       run: |
-        # ربات را اجرا کن. این دستور تا زمانی که گیت‌هاب اجازه دهد (حدود 6 ساعت) باز می‌ماند
         python main.py
+
