@@ -1,46 +1,48 @@
 import telebot
-import time
 import os
-import sys
+import time
 
-# دریافت توکن از متغیرهای محیطی گیت‌هاب (امنیت بالا)
-TOKEN = os.environ.get('BOT_TOKEN')
+# دریافت توکن
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+bot = telebot.TeleBot(BOT_TOKEN)
 
-if not TOKEN:
-    print("Error: BOT_TOKEN not found!")
-    sys.exit(1)
+print("Bot is running...")
 
-bot = telebot.TeleBot(TOKEN)
-
-# این هندلر فقط تغییرات اعضا (مثل جوین شدن) را رصد می‌کند
-@bot.chat_member_handler()
-def handle_chat_member_update(update):
+# هندلر برای وقتی کسی جدید وارد می‌شود (پیام سرویس)
+@bot.message_handler(content_types=['new_chat_members'])
+def ban_new_members(message):
     try:
-        # بررسی وضعیت جدید کاربر
-        new_status = update.new_chat_member.status
-        
-        # اگر کاربر عضو شد (member) ولی ادمین یا سازنده نیست
-        if new_status == 'member':
-            user_id = update.new_chat_member.user.id
-            chat_id = update.chat.id
-            first_name = update.new_chat_member.user.first_name
+        chat_id = message.chat.id
+        for user in message.new_chat_members:
+            print(f"Detecting user: {user.first_name}")
+            # کاربر را بن میکند
+            bot.ban_chat_member(chat_id, user.id)
+            # بلافاصله آنبن میکند تا بتواند بعدا برگردد (اختیاری)
+            # bot.unban_chat_member(chat_id, user.id) 
+            print(f"Kicked user: {user.id}")
             
-            print(f"User {first_name} ({user_id}) joined. Kicking...")
-
-            # 1. کاربر را بن (اخراج) می‌کنیم
-            bot.ban_chat_member(chat_id, user_id)
-            
-            # 2. یک ثانیه صبر می‌کنیم تا تلگرام پردازش کند
-            time.sleep(1)
-            
-            # 3. کاربر را آنبن می‌کنیم (تا بلاک نماند و بتواند کانال را ببیند)
-            bot.unban_chat_member(chat_id, user_id)
-            
-            print(f"User {first_name} kicked and unbanned successfully.")
-            
+            # پاک کردن پیام "فلانی وارد شد"
+            try:
+                bot.delete_message(chat_id, message.message_id)
+            except:
+                pass
     except Exception as e:
-        print(f"Error occurred: {e}")
+        print(f"Error: {e}")
 
-print("Bot started and listening for joins...")
-# اجرای ربات
-bot.infinity_polling(allowed_updates=['chat_member'], timeout=10, long_polling_timeout=5)
+# هندلر برای آپدیت وضعیت اعضا (روش مدرن‌تر برای کانال‌ها)
+@bot.chat_member_handler()
+def chat_member_update(event):
+    # اگر کاربری وضعیتش به 'member' تغییر کرد (یعنی جوین شد)
+    if event.new_chat_member.status == 'member' and event.old_chat_member.status != 'member':
+        try:
+            user_id = event.new_chat_member.user.id
+            chat_id = event.chat.id
+            print(f"New member detected via update: {user_id}")
+            
+            bot.ban_chat_member(chat_id, user_id)
+            print(f"Kicked user: {user_id}")
+        except Exception as e:
+            print(f"Error in chat_member_handler: {e}")
+
+# اجرای ربات با قابلیت شنیدن همه چیز
+bot.infinity_polling(allowed_updates=['message', 'chat_member', 'my_chat_member'])
