@@ -3,32 +3,34 @@ name: Kick Bot Runner
 on:
   push:
     branches: [ "main" ]
-  schedule:
-    - cron: '0 */6 * * *' # اجرا هر 6 ساعت
   workflow_dispatch:
+  # تنظیم زمان‌بندی برای اجرا هر 5 ساعت و 45 دقیقه
+  # این کار باعث می‌شود قبل از رسیدن به محدودیت 6 ساعته، ربات رفرش شود
+  schedule:
+    - cron: "45 */5 * * *"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # ایمنی: اگر به هر دلیلی گیر کرد، سر 5 ساعت و 55 دقیقه قطعش کن
+    timeout-minutes: 355
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # تغییر مهم: نصب مستقیم کتابخانه بدون نیاز به فایل متنی
-        pip install pyTelegramBotAPI
+      - name: Install Pyrogram & TgCrypto
+        # اینجا مستقیم کتابخانه ها را نصب می‌کنیم تا اگر فایل requirements نبود به مشکل نخورید
+        run: |
+          pip install --upgrade pip
+          pip install pyrogram tgcrypto
 
-    - name: Run Bot
-      env:
-        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      run: |
-        python main.py
-
+      - name: Run Bot
+        # --- توجه مهم ---
+        # اگر اسم فایل پایتون شما main.py نیست، نام زیر را تغییر دهید
+        run: python main.py
