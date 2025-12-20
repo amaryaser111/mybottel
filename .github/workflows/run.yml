@@ -5,14 +5,12 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
   # تنظیم زمان‌بندی برای اجرا هر 5 ساعت و 45 دقیقه
-  # این کار باعث می‌شود قبل از رسیدن به محدودیت 6 ساعته، ربات رفرش شود
   schedule:
     - cron: "45 */5 * * *"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # ایمنی: اگر به هر دلیلی گیر کرد، سر 5 ساعت و 55 دقیقه قطعش کن
     timeout-minutes: 355
 
     steps:
@@ -24,13 +22,12 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install Pyrogram & TgCrypto
-        # اینجا مستقیم کتابخانه ها را نصب می‌کنیم تا اگر فایل requirements نبود به مشکل نخورید
+      - name: Install Dependencies
+        # تغییر مهم اینجاست: نصب کتابخانه صحیح برای telebot
         run: |
           pip install --upgrade pip
-          pip install pyrogram tgcrypto
+          pip install pyTelegramBotAPI
 
       - name: Run Bot
-        # --- توجه مهم ---
-        # اگر اسم فایل پایتون شما main.py نیست، نام زیر را تغییر دهید
+        # مطمئن شوید که نام فایل شما main.py است
         run: python main.py
