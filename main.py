@@ -1,7 +1,7 @@
 import telebot
 import os
 
-# گرفتن توکن از متغیرهای محیطی
+# گرفتن vhvتوکن از متغیرهای محیطی
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 bot = telebot.TeleBot(BOT_TOKEN)
